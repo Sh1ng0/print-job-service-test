@@ -1,12 +1,11 @@
-FROM eclipse-temurin:25-jdk AS build
+FROM maven:3-eclipse-temurin-25 AS build
 WORKDIR /app
 
-COPY .mvn/ .mvn/
-COPY mvnw pom.xml ./
-RUN ./mvnw -q dependency:go-offline
+COPY pom.xml ./
+RUN mvn -q dependency:go-offline
 
 COPY src ./src
-RUN ./mvnw -q package -DskipTests
+RUN mvn -q package -DskipTests
 
 FROM eclipse-temurin:25-jre
 WORKDIR /app
