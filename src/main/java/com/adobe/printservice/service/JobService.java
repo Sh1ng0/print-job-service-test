@@ -109,7 +109,6 @@ public class JobService {
           job.setStatus(JobStatus.FAILED);
           JobServiceLogEvent.JOB_MAX_RETRIES_EXCEEDED.log(log, jobId, failure.errorMessage());
         } else {
-          // Lo devolvemos a la cola para que el Worker lo vuelva a atrapar
           job.setStatus(JobStatus.QUEUED);
           JobServiceLogEvent.JOB_TRANSIENT_FAILURE.log(log, jobId, newAttempts, MAX_RETRIES, failure.errorMessage());
         }

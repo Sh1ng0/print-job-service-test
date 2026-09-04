@@ -20,7 +20,7 @@ import java.net.URI;
  * delegating all business logic to the underlying JobService.
  */
 @RestController
-@RequestMapping("/api/jobs")
+@RequestMapping("/jobs")
 public class JobResource {
 
   private final JobService jobService;
