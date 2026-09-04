@@ -4,12 +4,14 @@ package com.adobe.printservice.domain;
 import java.util.concurrent.ThreadLocalRandom;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 /**
  * A simulation of the rendering engine for production testing purposes.
  * Introduces artificial delays to simulate heavy processing and randomly
  * triggers transient failures to validate the orchestrator's retry resilience.
  */
+@Component
 public class SimulatedRenderEngine implements RenderEngine {
 
   private static final Logger log = LoggerFactory.getLogger(SimulatedRenderEngine.class);

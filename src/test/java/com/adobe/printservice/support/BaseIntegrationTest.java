@@ -26,6 +26,7 @@ public abstract class BaseIntegrationTest {
     registry.add("spring.datasource.url", postgres::getJdbcUrl);
     registry.add("spring.datasource.username", postgres::getUsername);
     registry.add("spring.datasource.password", postgres::getPassword);
+    registry.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");
     registry.add("worker.poll.interval.ms", () -> "10");
   }
 }

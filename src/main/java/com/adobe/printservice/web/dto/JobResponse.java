@@ -10,7 +10,7 @@ public record JobResponse(
     JobStatus status,
     int attempts,
     String errorMessage,
-    boolean hasResult, // Extra útil para el cliente
+    boolean hasResult,
     Instant createdAt,
     Instant updatedAt
 ) {
