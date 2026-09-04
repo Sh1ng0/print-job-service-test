@@ -100,7 +100,7 @@ class JobServiceTest {
       // Arrange
       Job job = new Job();
       job.setId("job-1");
-      job.setAttempts(1); // Ya ha fallado una vez
+      job.setAttempts(1);
       job.setStatus(JobStatus.PROCESSING);
 
       when(jobRepository.findById("job-1")).thenReturn(Optional.of(job));
@@ -121,7 +121,7 @@ class JobServiceTest {
       // Arrange
       Job job = new Job();
       job.setId("job-1");
-      job.setAttempts(2); // Está en su último intento antes de fallar permanentemente (2 + 1 = 3)
+      job.setAttempts(2);
       job.setStatus(JobStatus.PROCESSING);
 
       when(jobRepository.findById("job-1")).thenReturn(Optional.of(job));
@@ -158,7 +158,7 @@ class JobServiceTest {
       assertThat(job1.getStatus()).isEqualTo(JobStatus.PROCESSING);
       assertThat(job2.getStatus()).isEqualTo(JobStatus.PROCESSING);
 
-      // Verificamos que se hizo el saveAll con la lista modificada
+      // For saveAll verification
       @SuppressWarnings("unchecked")
       ArgumentCaptor<List<Job>> captor = ArgumentCaptor.forClass(List.class);
       verify(jobRepository).saveAll(captor.capture());

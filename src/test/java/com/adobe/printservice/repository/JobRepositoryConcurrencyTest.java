@@ -6,6 +6,7 @@ import com.adobe.printservice.support.BaseIntegrationTest;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +20,7 @@ import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@DisplayName("Job Repository Concurrency Tests")
 public class JobRepositoryConcurrencyTest extends BaseIntegrationTest {
 
   private static final Logger log = LoggerFactory.getLogger(JobRepositoryConcurrencyTest.class);
@@ -36,6 +38,7 @@ public class JobRepositoryConcurrencyTest extends BaseIntegrationTest {
   }
 
   @Test
+  @DisplayName("Two concurrent workers should lock disjoint batches without duplicates or deadlocks")
   void shouldHandleConcurrentBatchLockingWithoutDeadlocksOrDuplicates() throws ExecutionException, InterruptedException {
     jobRepository.deleteAll();
     jobRepository.flush();
