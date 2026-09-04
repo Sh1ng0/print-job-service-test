@@ -119,4 +119,24 @@ public class JobService {
     job.setUpdatedAt(Instant.now());
     jobRepository.save(job);
   }
+
+
+  /**
+   * Recupera la lista de trabajos, opcionalmente filtrada por estado.
+   */
+  @Transactional(readOnly = true)
+  public List<Job> listJobs(JobStatus status) {
+    if (status == null) {
+      return jobRepository.findAll();
+    }
+    return jobRepository.findByStatus(status);
+  }
+
+  /**
+   * Recupera el contenido del resultado si está DONE.
+   */
+  @Transactional(readOnly = true)
+  public Optional<String> getJobResult(String id) {
+    return jobRepository.findById(id).map(Job::getResultContent);
+  }
 }

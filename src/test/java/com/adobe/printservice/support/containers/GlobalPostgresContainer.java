@@ -3,7 +3,7 @@ package com.adobe.printservice.support.containers;
 import org.testcontainers.containers.PostgreSQLContainer;
 
 /**
- * Singleton implementation (Bloch Enum) for the PostgreSQL test container.
+ * Singleton implementation for the PostgreSQL test container.
  * Guarantees that only a single instance of the database is spun up for the entire
  * test suite execution, drastically reducing context load times.
  * Relies on Testcontainers' reuse feature for optimal performance.
