@@ -34,6 +34,8 @@ public class JobPollingWorker {
   // Adjust batch size depending on expected throughput and database capabilities
   private static final int BATCH_SIZE = 10;
 
+  // No need for semaphores because Batch Size and the Shceduler deal with backpressure
+
   private final JobService jobService;
   private final RenderEngine renderEngine;
   private final ThreadFactory virtualThreadFactory;
@@ -90,7 +92,7 @@ public class JobPollingWorker {
         JobExecution execution = future.resultNow(); // Safe to call since executor is closed
         jobService.processRenderResult(execution.jobId(), execution.result());
       } catch (IllegalStateException e) {
-        log.error("Failed to retrieve result from virtual thread. Task might have been cancelled.", e);
+        WorkerLogEvent.WORKER_VIRTUAL_THREAD_ERROR.log(log, e.getMessage());
       }
     }
   }

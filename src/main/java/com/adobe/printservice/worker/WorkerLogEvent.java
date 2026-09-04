@@ -9,7 +9,8 @@ import com.adobe.printservice.observability.Loggable;
 public enum WorkerLogEvent implements Loggable {
 
   WORKER_POLL_STARTED(LogLevel.DEBUG, "Worker waking up to poll for QUEUED jobs"),
-  JOB_PROCESSING_STARTED(LogLevel.DEBUG, "Starting render simulation for Job ID: {}");
+  JOB_PROCESSING_STARTED(LogLevel.DEBUG, "Starting render simulation for Job ID: {}"),
+  WORKER_VIRTUAL_THREAD_ERROR(LogLevel.ERROR, "Failed to retrieve result from virtual thread. Task might have been cancelled: {}");
 
   private final LogLevel level;
   private final String messageTemplate;
