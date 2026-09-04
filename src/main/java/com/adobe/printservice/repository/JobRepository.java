@@ -40,4 +40,11 @@ public interface JobRepository extends JpaRepository<Job, String> {
    * Utilizado para el endpoint GET /jobs?status={status}
    */
   List<Job> findByStatus(JobStatus status);
+
+
+  /**
+   * Cuenta el número total de trabajos en un estado específico.
+   * Utilizado para las métricas de Actuator.
+   */
+  long countByStatus(JobStatus status);
 }
