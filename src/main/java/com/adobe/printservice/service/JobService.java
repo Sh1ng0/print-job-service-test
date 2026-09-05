@@ -19,6 +19,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+
+/**
+ * Core business service managing the lifecycle and state transitions of Print Jobs.
+ * <p>
+ * This service acts as a state machine for rendering jobs, handling the progression from
+ * {@code QUEUED} to {@code PROCESSING}, and ultimately to {@code DONE} or {@code FAILED}.
+ * It relies on database-level locking mechanisms to allow concurrent background workers
+ * to fetch and process batches safely without duplication.
+ * <p>
+ * Responsibilities include:
+ * <ul>
+ *     <li>Validating and persisting incoming job submissions.</li>
+ *     <li>Safely locking batches of queued jobs for concurrent worker execution.</li>
+ *     <li>Applying retry policies and state transitions based on immutable render results.</li>
+ *     <li>Providing read-only access for API status inquiries.</li>
+ * </ul>
+ */
 @Service
 public class JobService {
 
@@ -34,7 +51,7 @@ public class JobService {
   }
 
   /**
-   * Valida la plantilla y crea un nuevo trabajo en estado QUEUED.
+   * Validates the template and creates a new job in QUEUED state.
    */
   @Transactional
   public Job createJob(String templateId, Map<String, Object> parameters) {
@@ -57,7 +74,7 @@ public class JobService {
   }
 
   /**
-   * Recupera un trabajo por su ID para las consultas de la API.
+   * Retrieves a job by its ID for API queries.
    */
   @Transactional(readOnly = true)
   public Optional<Job> getJob(String id) {
@@ -65,7 +82,7 @@ public class JobService {
   }
 
   /**
-   * Rescata un lote de trabajos de la base de datos bloqueándolos para su procesamiento.
+   * Fetches a batch of jobs from the database, locking them for processing.
    */
   @Transactional
   public List<Job> fetchAndLockNextBatch(int limit) {
@@ -73,8 +90,6 @@ public class JobService {
 
     if (!lockedJobs.isEmpty()) {
       JobServiceLogEvent.JOBS_LOCKED_FOR_PROCESSING.log(log, lockedJobs.size());
-      // Los marcamos inmediatamente como PROCESSING para reflejar la realidad
-      // y que queden excluidos de futuras consultas
       lockedJobs.forEach(job -> {
         job.setStatus(JobStatus.PROCESSING);
         job.setUpdatedAt(Instant.now());
@@ -86,8 +101,8 @@ public class JobService {
   }
 
   /**
-   * Transforma el resultado inmutable del motor de vuelta al estado mutable de JPA.
-   * Utiliza un switch exhaustivo para garantizar que se manejan todos los flujos.
+   * Transforms the immutable engine result back into JPA mutable state.
+   * Uses an exhaustive switch to ensure all flows are handled.
    */
   @Transactional
   public void processRenderResult(String jobId, RenderResult result) {
@@ -121,7 +136,7 @@ public class JobService {
 
 
   /**
-   * Recupera la lista de trabajos, opcionalmente filtrada por estado.
+   * Retrieves the list of jobs, optionally filtered by status.
    */
   @Transactional(readOnly = true)
   public List<Job> listJobs(JobStatus status) {
@@ -132,7 +147,7 @@ public class JobService {
   }
 
   /**
-   * Recupera el contenido del resultado si está DONE.
+   * Retrieves the result content if the job is DONE.
    */
   @Transactional(readOnly = true)
   public Optional<String> getJobResult(String id) {

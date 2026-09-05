@@ -15,7 +15,6 @@ import org.testcontainers.containers.PostgreSQLContainer;
 public abstract class BaseIntegrationTest {
 
   static {
-
     GlobalPostgresContainer.INSTANCE.getContainer();
   }
 
