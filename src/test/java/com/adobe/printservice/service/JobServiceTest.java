@@ -24,6 +24,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("Job Service Unit Tests")
 class JobServiceTest {
 
   @Mock
@@ -40,6 +41,7 @@ class JobServiceTest {
   class CreateJobTests {
 
     @Test
+    @DisplayName("Successfully creates a QUEUED job when the template exists")
     void shouldCreateJobWhenTemplateExists() {
       // Arrange
       String templateId = "valid-template";
@@ -59,6 +61,7 @@ class JobServiceTest {
     }
 
     @Test
+    @DisplayName("Throws IllegalArgumentException when the template does not exist")
     void shouldThrowExceptionWhenTemplateDoesNotExist() {
       // Arrange
       when(templateRepository.existsById("invalid")).thenReturn(false);
@@ -77,6 +80,7 @@ class JobServiceTest {
   class ProcessRenderResultTests {
 
     @Test
+    @DisplayName("Transitions job to DONE and saves content on successful render")
     void shouldTransitionToDoneOnSuccess() {
       // Arrange
       Job job = new Job();
@@ -96,6 +100,7 @@ class JobServiceTest {
     }
 
     @Test
+    @DisplayName("Re-queues job and increments attempts on transient failure")
     void shouldRequeueOnTransientFailure() {
       // Arrange
       Job job = new Job();
@@ -117,11 +122,12 @@ class JobServiceTest {
     }
 
     @Test
+    @DisplayName("Transitions job to FAILED when max retries are exceeded")
     void shouldTransitionToFailedOnMaxRetries() {
       // Arrange
       Job job = new Job();
       job.setId("job-1");
-      job.setAttempts(2);
+      job.setAttempts(2); // 2 previous attempts + this 1 = 3 (MAX)
       job.setStatus(JobStatus.PROCESSING);
 
       when(jobRepository.findById("job-1")).thenReturn(Optional.of(job));
@@ -136,6 +142,21 @@ class JobServiceTest {
       assertThat(job.getErrorMessage()).isEqualTo("Fatal rendering error");
       verify(jobRepository).save(job);
     }
+
+    @Test
+    @DisplayName("Throws IllegalStateException if the job is deleted before result is processed")
+    void shouldThrowExceptionWhenJobVanishes() {
+      // Arrange
+      when(jobRepository.findById("ghost-job")).thenReturn(Optional.empty());
+      RenderResult success = new RenderResult.Success("content");
+
+      // Act & Assert
+      assertThatThrownBy(() -> jobService.processRenderResult("ghost-job", success))
+          .isInstanceOf(IllegalStateException.class)
+          .hasMessageContaining("Job vanished from DB: ghost-job");
+
+      verify(jobRepository, never()).save(any());
+    }
   }
 
   @Nested
@@ -143,6 +164,7 @@ class JobServiceTest {
   class FetchAndLockNextBatchTests {
 
     @Test
+    @DisplayName("Updates status to PROCESSING for all locked jobs in the batch")
     void shouldUpdateStatusToProcessingForLockedJobs() {
       // Arrange
       Job job1 = new Job(); job1.setStatus(JobStatus.QUEUED);
@@ -158,7 +180,6 @@ class JobServiceTest {
       assertThat(job1.getStatus()).isEqualTo(JobStatus.PROCESSING);
       assertThat(job2.getStatus()).isEqualTo(JobStatus.PROCESSING);
 
-      // For saveAll verification
       @SuppressWarnings("unchecked")
       ArgumentCaptor<List<Job>> captor = ArgumentCaptor.forClass(List.class);
       verify(jobRepository).saveAll(captor.capture());
