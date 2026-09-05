@@ -81,6 +81,30 @@ need to build template management. Your job is to implement the render job lifec
 We're not going to tell you how to implement the queue/worker, the retry policy, or what your
 readiness check should verify - that's for you to decide.
 
+### Design Decisions
+
+*   **Concurrency & Queue Strategy:** The queue is implemented using database-level row locking (`SELECT ... FOR UPDATE SKIP LOCKED`). This ensures safe horizontal scaling, allowing multiple application instances to pull disjoint batches of jobs simultaneously without deadlocks or double-processing.
+*   **Domain Isolation & Immutability:** The mutable JPA `Job` entity is strictly treated as a persistence container. To protect the rendering logic from database metadata, only the strictly necessary fields are extracted into an immutable `RenderTask` record before passing it to the engine.
+*   **Exhaustive State Machine:** The engine's output is modeled as a `RenderResult` sealed interface. This allows the core service to use Java 25 pattern matching (`switch` expressions) to handle state transitions, guaranteeing at compile-time that all success and failure paths are explicitly covered.
+*   **Worker Concurrency (Virtual Threads):** I/O-bound rendering tasks are processed concurrently using a thread-per-task model powered by Virtual Threads. Wrapping the executor in a `try-with-resources` block enforces structured concurrency, elegantly blocking the main orchestrator until all virtual threads in the batch terminate.
+*   **Scheduling & Backpressure:** The background worker polls the database using a `@Scheduled(fixedDelay=...)` strategy. Since the delay interval only starts after the previous batch is fully processed, it acts as a natural backpressure mechanism, preventing database flooding during traffic spikes.
+*   **Structured Observability:** A custom enum-based logging facade was implemented for business events. This guarantees that all state transitions, retries, and errors are logged consistently.
+
+### Observability & Endpoints
+
+The service exposes the following endpoints as required:
+
+**Business API:**
+*   `POST /jobs` - Submit a new render job.
+*   `GET /jobs` - List all jobs (supports `?status=` filtering).
+*   `GET /jobs/{id}` - Get job status and details.
+*   `GET /jobs/{id}/result` - Fetch the rendered output (Returns `200 OK` if DONE, `409 Conflict` if processing/failed).
+
+**Actuator (Health & Metrics):**
+*   **Liveness Probe:** `GET /actuator/health/liveness` (Confirms the HTTP server is accepting traffic).
+*   **Readiness Probe:** `GET /actuator/health/readiness` (Confirms the application is fully ready, automatically verifying the underlying PostgreSQL database connection).
+*   **Custom Metrics:** `GET /actuator/metrics/printservice.jobs.count` (Exposes the real-time count of jobs grouped by their `status` tag).
+
 
 ### Optional (not required to complete the exercise)
 

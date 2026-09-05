@@ -60,7 +60,7 @@ public class JobRepositoryConcurrencyTest extends BaseIntegrationTest {
     List<Job> batch1 = worker1.get();
     List<Job> batch2 = worker2.get();
 
-    // Logs mantained to see the virtual threads in action
+    // Logs maintained to see the concurrent workers/instances in action
     log.info("Batch1 size: {}, IDs: {}", batch1.size(), batch1.stream().map(Job::getId).toList());
     log.info("Batch2 size: {}, IDs: {}", batch2.size(), batch2.stream().map(Job::getId).toList());
 
